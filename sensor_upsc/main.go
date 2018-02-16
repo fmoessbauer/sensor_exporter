@@ -46,7 +46,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andmarios/sensor_exporter/sensor"
+	"github.com/fmoessbauer/sensor_exporter/sensor"
 )
 
 var suggestedScrapeInterval = time.Duration(10 * time.Second)
@@ -71,33 +71,63 @@ type Sensor struct {
 // expose it. Please also add a TYPE and HELP entry.
 var (
 	upscVarFloat = map[string]string{
-		"battery.charge":  "upsc_battery_charge",
-		"battery.voltage": "upsc_battery_voltage",
-		"input.frequency": "upsc_input_frequency",
-		"input.voltage":   "upsc_input_voltage",
-		"input.current":   "upsc_input_current",
-		"output.voltage":  "upsc_output_voltage",
-		"ups.load":        "upsc_ups_load",
-		"ups.temperature": "upsc_ups_temperature",
+		"battery.charge"         : "upsc_battery_charge",
+		"battery.voltage"        : "upsc_battery_voltage",
+		"battery.voltage.high"   : "upsc_battery_voltage_high",
+		"battery.voltage.low"    : "upsc_battery_voltage_low",
+		"battery.voltage.nominal": "upsc_battery_voltage_nominal",
+		"input.frequency"        : "upsc_input_frequency",
+		"input.frequency.nominal": "upsc_input_frequency_nominal",
+		"input.voltage"          : "upsc_input_voltage",
+		"input.voltage.fault"    : "upsc_input_voltage_fault",
+		"input.voltage.nominal"  : "upsc_input_voltage_nominal",
+		"input.current"          : "upsc_input_current",
+		"output.voltage"         : "upsc_output_voltage",
+		"ups.beeper.status"      : "upsc_ups_beeper_enabled",
+		"ups.delay.shutdown"     : "upsc_ups_delay_shutdown",
+		"ups.delay.start"        : "upsc_ups_delay_start",
+		"ups.load"               : "upsc_ups_load",
+		"ups.status"             : "upsc_ups_online",
+		"ups.temperature"        : "upsc_ups_temperature",
 	}
 	sensorsType = []string{
 		"# TYPE upsc_battery_charge gauge",
 		"# TYPE upsc_battery_voltage gauge",
+		"# TYPE upsc_battery_voltage_high gauge",
+		"# TYPE upsc_battery_voltage_low gauge",
+		"# TYPE upsc_battery_voltage_nominal gauge",
 		"# TYPE upsc_input_frequency gauge",
+		"# TYPE upsc_input_frequency_nominal gauge",
 		"# TYPE upsc_input_voltage gauge",
+		"# TYPE upsc_input_voltage_fault gauge",
+		"# TYPE upsc_input_voltage_nominal gauge",
 		"# TYPE upsc_input_current gauge",
 		"# TYPE upsc_output_voltage gauge",
+		"# TYPE upsc_ups_beeper_enabled gauge",
+		"# TYPE upsc_ups_delay_shutdown gauge",
+		"# TYPE upsc_ups_delay_start gauge",
 		"# TYPE upsc_ups_load gauge",
+		"# TYPE upsc_ups_online gauge",
 		"# TYPE upsc_ups_temperature gauge",
 	}
 	sensorsHelp = []string{
 		"# HELP upsc_battery_charge gauge Battery charge (percent)",
 		"# HELP upsc_battery_voltage Battery voltage (V)",
+		"# HELP upsc_battery_voltage_high Battery voltage high (V)",
+		"# HELP upsc_battery_voltage_low Battery voltage low (V)",
+		"# HELP upsc_battery_voltage_nominal Battery voltage nominal / expected (V)",
 		"# HELP upsc_input_frequency Input line frequency (Hz)",
+		"# HELP upsc_input_frequency_nominal Input line frequency nominal / expected (Hz)",
 		"# HELP upsc_input_voltage Input voltage (V)",
+		"# HELP upsc_input_voltage_fault Input voltage fault (V)",
+		"# HELP upsc_input_voltage_nominal Input voltage nominal / expected (V)",
 		"# HELP upsc_input_current Input current (A)",
 		"# HELP upsc_output_voltage Output voltage (V)",
+		"# HELP upsc_ups_beeper_enabled Beeper is enabled (bool)",
+		"# HELP upsc_ups_delay_shutdown Wait number of seconds before shutdown (s)",
+		"# HELP upsc_ups_delay_start Start delay after number of seconds (s)",
 		"# HELP upsc_ups_load Load on UPS (percent)",
+		"# HELP upsc_ups_online UPS is online (bool)",
 		"# HELP upsc_ups_temperature UPS temperature (degrees C)",
 	}
 )
@@ -177,6 +207,12 @@ func (s Sensor) Scrape() (out string, e error) {
 		v = s.Re.FindStringSubmatch(res)
 		if len(v) == 3 {
 			if value, exists := upscVarFloat[v[1]]; exists {
+				switch v[2] {
+				  case "OL": v[2] = "1"
+			          case "OF": v[2] = "0"
+			          case "enabled": v[2] = "1"
+			          case "disabled": v[2] = "0"
+				}
 				reading, err := strconv.ParseFloat(v[2], 64)
 				if err != nil {
 					sensor.Incident()

@@ -27,12 +27,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/andmarios/sensor_exporter/sensor"
-	_ "github.com/andmarios/sensor_exporter/sensor_coretemp"
-	_ "github.com/andmarios/sensor_exporter/sensor_example"
-	_ "github.com/andmarios/sensor_exporter/sensor_hddtemp"
-	_ "github.com/andmarios/sensor_exporter/sensor_log"
-	_ "github.com/andmarios/sensor_exporter/sensor_upsc"
+	"github.com/fmoessbauer/sensor_exporter/sensor"
+	_ "github.com/fmoessbauer/sensor_exporter/sensor_coretemp"
+	_ "github.com/fmoessbauer/sensor_exporter/sensor_example"
+	_ "github.com/fmoessbauer/sensor_exporter/sensor_hddtemp"
+	_ "github.com/fmoessbauer/sensor_exporter/sensor_log"
+	_ "github.com/fmoessbauer/sensor_exporter/sensor_upsc"
 )
 
 type Scraper struct {
