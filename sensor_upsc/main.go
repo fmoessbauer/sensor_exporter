@@ -130,6 +130,12 @@ var (
 		"# HELP upsc_ups_online UPS is online (bool)",
 		"# HELP upsc_ups_temperature UPS temperature (degrees C)",
 	}
+	sensorStringMapping = map[string]float64{
+		"enabled"  : 1,
+		"disabled" : 0,
+		"OL"       : 1,
+		"OF"       : 0,
+	}
 )
 
 func NewSensor(opts string) (sensor.Collector, error) {
@@ -207,17 +213,16 @@ func (s Sensor) Scrape() (out string, e error) {
 		v = s.Re.FindStringSubmatch(res)
 		if len(v) == 3 {
 			if value, exists := upscVarFloat[v[1]]; exists {
-				switch v[2] {
-				  case "OL": v[2] = "1"
-			          case "OF": v[2] = "0"
-			          case "enabled": v[2] = "1"
-			          case "disabled": v[2] = "0"
-				}
-				reading, err := strconv.ParseFloat(v[2], 64)
-				if err != nil {
-					sensor.Incident()
-					log.Printf("Upsc %s@%s, could not parse %s. Error: %s\n", s.Ups, s.Host, v[1], err.Error())
-					break
+				var reading float64
+				if mapping, mexists := sensorStringMapping[v[2]]; mexists {
+					reading = mapping
+				} else {
+					reading, err = strconv.ParseFloat(v[2], 64)
+					if err != nil {
+						sensor.Incident()
+						log.Printf("Upsc %s@%s, could not parse %s. Error: %s\n", s.Ups, s.Host, v[1], err.Error())
+						break
+					}
 				}
 				out += fmt.Sprintf("%s%s %.2f\n", value, s.Labels, reading)
 			}
