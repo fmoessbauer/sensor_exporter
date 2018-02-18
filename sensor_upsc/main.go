@@ -72,6 +72,7 @@ type Sensor struct {
 var (
 	upscVarFloat = map[string]string{
 		"battery.charge"         : "upsc_battery_charge",
+		"battery.charge.low"     : "upsc_battery_charge_low",
 		"battery.voltage"        : "upsc_battery_voltage",
 		"battery.voltage.high"   : "upsc_battery_voltage_high",
 		"battery.voltage.low"    : "upsc_battery_voltage_low",
@@ -92,6 +93,7 @@ var (
 	}
 	sensorsType = []string{
 		"# TYPE upsc_battery_charge gauge",
+		"# TYPE upsc_battery_charge_low gauge",
 		"# TYPE upsc_battery_voltage gauge",
 		"# TYPE upsc_battery_voltage_high gauge",
 		"# TYPE upsc_battery_voltage_low gauge",
@@ -112,6 +114,7 @@ var (
 	}
 	sensorsHelp = []string{
 		"# HELP upsc_battery_charge gauge Battery charge (percent)",
+		"# HELP upsc_battery_charge_low gauge Low battery charge threshold (percent)",
 		"# HELP upsc_battery_voltage Battery voltage (V)",
 		"# HELP upsc_battery_voltage_high Battery voltage high (V)",
 		"# HELP upsc_battery_voltage_low Battery voltage low (V)",
@@ -133,8 +136,11 @@ var (
 	sensorStringMapping = map[string]float64{
 		"enabled"  : 1,
 		"disabled" : 0,
-		"OL"       : 1,
-		"OF"       : 0,
+		"OL"       : 2,   // online, charged
+		"FSD OL"   : 1.5, // online, forced shutdown 
+		"OB"       : 1,   // on battery
+		"FSD OB"   : 0.5, // offline, forced shutdown 
+		"LB"       : 0,   // low battery
 	}
 )
 
